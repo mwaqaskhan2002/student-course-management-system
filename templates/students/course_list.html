@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %} Course Catalog {% endblock %}
+
+{% block content %}
+<div class="container my-5">
+
+    {% if messages %}
+        <div class="row justify-content-center my-2">
+            <div class="col-12">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show shadow-sm rounded-3 mb-2" role="alert">
+                        <div class="d-flex align-items-center">
+                            {% if message.tags == 'success' %}
+                                <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                            {% else %}
+                                <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                            {% endif %}
+                            <div>{{ message }}</div>
+                        </div>
+                    <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+        <div>
+            <h2 class="text-dark fw-bold mb-1">Course Catalog</h2>
+            <p class="text-muted m-0">Manage university courses and their department allocations.</p>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            
+            <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle rounded-3 shadow-sm py-2 px-3" type="button" id="deptFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ri-building-line"></i> Department: 
+                    {% if request.GET.department and request.GET.department != 'all' %}
+                        {% for d in departments %}
+                            {% if d.id|stringformat:"s" == request.GET.department %}
+                                {{ d.department_code }}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        All Departments
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="deptFilterDropdown">
+                    <li>
+                        <a class="dropdown-item {% if not request.GET.department or request.GET.department == 'all' %}active bg-primary{% endif %}" 
+                           href="?department=all{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}">
+                            All Departments
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    {% for dept in departments %}
+                        <li>
+                            <a class="dropdown-item {% if request.GET.department == dept.id|stringformat:"s" %}active bg-primary{% endif %}" 
+                               href="?department={{ dept.id }}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}">
+                                {{ dept.department_name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle rounded-3 shadow-sm py-2 px-3" type="button" id="courseSortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ri-sort-asc"></i> Sort By: 
+                    {% if request.GET.order_by == 'name_asc' %}
+                        Course Name (A-Z)
+                    {% elif request.GET.order_by == 'code_asc' %}
+                        Course Code
+                    {% else %}
+                        Newest Added
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="courseSortDropdown">
+                    <li>
+                        <a class="dropdown-item {% if request.GET.order_by == 'newest' or not request.GET.order_by %}active bg-primary{% endif %}" 
+                           href="?order_by=newest{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}">
+                            <i class="ri-time-line me-1"></i> Newest First
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item {% if request.GET.order_by == 'name_asc' %}active bg-primary{% endif %}" 
+                           href="?order_by=name_asc{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}">
+                            <i class="ri-sort-alphabet-asc me-1"></i> Course Name (A-Z)
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item {% if request.GET.order_by == 'code_asc' %}active bg-primary{% endif %}" 
+                           href="?order_by=code_asc{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}">
+                            <i class="ri-key-2-line me-1"></i> Course Code
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <a href="{% url 'students:course_add' %}" class="btn btn-primary btn-sm rounded-3 shadow-sm py-2 px-3">
+                <i class="ri-add-circle-fill"></i> Add New Course
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for course in courses %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 rounded-4 transition-hover">
+                    <div class="card-body p-4 d-flex flex-column">
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-dark text-white px-2.5 py-1.5 rounded-2 font-monospace shadow-sm" style="font-size: 0.85rem;">
+                                {{ course.course_code }}
+                            </span>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'students:course_update' course.pk %}" class="btn btn-sm btn-outline-success rounded-2" title="Edit Course">
+                                    <i class="ri-edit-box-fill"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-2" data-bs-toggle="modal" data-bs-target="#deleteCourseModal-{{ course.pk }}" title="Delete Course">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <h5 class="card-title fw-bold text-dark mb-2">{{ course.course_name }}</h5>
+                        
+                        <p class="text-muted small mb-4">
+                            <i class="ri-user-shared-line"></i> Enrolled Students: <strong class="text-success">{{ course.students.count }}</strong>
+                        </p>
+
+                        <div class="mt-auto pt-3 border-top">
+                            <span class="d-block text-muted small fw-bold mb-2">Offered In:</span>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for dept in course.departments.all %}
+                                    <span class="badge bg-soft-primary text-primary px-2 py-1.5 rounded-2" style="font-size: 0.75rem; background-color: #e8f0fe;">
+                                        {{ dept.department_code }}
+                                    </span>
+                                {% empty %}
+                                    <span class="text-muted small text-secondary fst-italic">Not assigned to any department</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div> </div> </div> <div class="modal fade" id="deleteCourseModal-{{ course.pk }}" tabindex="-1" aria-labelledby="deleteModalLabel-{{ course.pk }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 rounded-4 shadow">
+                        <div class="modal-header border-0 pb-0">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="ri-error-warning-fill text-danger" style="font-size: 3.5rem;"></i>
+                            </div>
+                            <h4 class="fw-bold text-dark mb-2">Confirm Delete</h4>
+                            <p class="text-muted mb-0">Are you sure you want to delete <strong class="text-dark">"{{ course.course_name }}"</strong>?</p>
+                            <p class="text-danger small fw-bold">This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer border-0 pt-0 d-flex justify-content-center gap-2 pb-4">
+                            <button type="button" class="btn btn-light border rounded-3 px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+                            <form action="{% url 'students:course_delete' course.pk %}" method="post" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger rounded-3 px-4 py-2">
+                                    Yes, Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="p-5 bg-white shadow-sm rounded-4 border">
+                    <i class="ri-book-open-line text-muted display-4"></i>
+                    <h4 class="mt-3 fw-bold text-dark">No Courses Found</h4>
+                    <p class="text-muted">No courses found matching the selected filters.</p>
+                    <a href="{% url 'students:course_add' %}" class="btn btn-primary rounded-3 mt-2">
+                        Create First Course
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}

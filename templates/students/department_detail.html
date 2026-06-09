@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}{{ department.department_name }} Details{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="card p-4 bg-dark text-white rounded-4 shadow mb-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-6 fw-bold m-0">{{ department.department_name }}</h1>
+                <p class="text-light-50 m-0 mt-1"><i class="ri-code-box-line"></i> Department Management Portal</p>
+            </div>
+            <span class="badge bg-light text-dark fs-4 px-3 py-2 fw-bold">{{ department.department_code }}</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-sm rounded-3 border-0">
+                <div class="card-header bg-primary text-white py-3 fw-bold fs-5">
+                    <i class="ri-book-open-fill"></i> Offered Courses ({{ department.courses.count }})
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for course in department.courses.all %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                <div>
+                                    <strong class="text-dark">{{ course.course_name }}</strong>
+                                    <span class="d-block text-muted small">{{ course.course_code }}</span>
+                                </div>
+                                <span class="badge bg-soft-primary text-primary rounded-pill bg-light">Active</span>
+                            </div>
+                        {% empty %}
+                            <div class="p-4 text-center text-muted">
+                                <i class="ri-information-line fs-3"></i>
+                                <p class="m-0 mt-2">No courses registered for this department.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7 mb-4">
+            <div class="card shadow-sm rounded-3 border-0">
+                <div class="card-header bg-success text-white py-3 fw-bold fs-5">
+                    <i class="ri-user-group-fill"></i> Enrolled Students ({{ students.count }})
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Enrolled Courses</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                    <tr>
+                                        <td><strong>{{ student.name }}</strong></td>
+                                        <td class="text-muted small">{{ student.email }}</td>
+                                        
+                                        <td style="max-width: 150px;"> 
+                                            {% if student.courses.all %}
+                                                <div class="d-flex flex-wrap gap-1"> 
+                                                    {% for course in student.courses.all %}
+                                                        <span class="badge bg-primary px-2 py-1.5 rounded-2 shadow-sm" style="font-size: 0.75rem;">
+                                                            {{ course.course_code }}
+                                                        </span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <span class="badge bg-light text-muted fw-normal">No courses</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="text-center">
+                                            <form method="POST" action="{% url 'students:student_remove_dept' student.pk %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove Student" onclick="return confirm('Are you sure you want to remove this student from the department?')">
+                                                    <i class="ri-user-unfollow-line"></i> 
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            <i class="ri-user-search-line fs-3"></i>
+                                            <p class="m-0 mt-2">No students currently enrolled.</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{% url 'students:department_list' %}" class="btn btn-secondary rounded-3">
+            <i class="ri-arrow-left-line"></i> Back to Main List
+        </a>
+    </div>
+</div>
+{% endblock %}

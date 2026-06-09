@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Department List{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+    {% if messages %}
+        <div class="row justify-content-center my-2">
+            <div class="col-12">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show shadow-sm rounded-3 mb-2" role="alert">
+                        <div class="d-flex align-items-center">
+                            {% if message.tags == 'success' %}
+                                <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                            {% else %}
+                                <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                            {% endif %}
+                            <div>{{ message }}</div>
+                        </div>
+                    <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="bg-white py-3 d-flex justify-content-between flex-lg-nowrap flex-wrap align-items-center">
+    <h4 class="mb-0 text-dark fw-bold">University Departments</h4>
+
+    <div class="d-flex justify-content-lg-end align-items-center flex-wrap gap-2 my-2">
+
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle rounded-3 shadow-sm py-2 px-3" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="ri-sort-asc"></i> Sort By: 
+                {% if request.GET.order_by == 'name_asc' %}
+                    Name (A-Z)
+                {% elif request.GET.order_by == 'name_desc' %}
+                    Name (Z-A)
+                {% elif request.GET.order_by == 'code_asc' %}
+                    Code (A-Z)
+                {% else %}
+                    Newest First
+                {% endif %}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="sortDropdown">
+                <li>
+                    <a class="dropdown-item {% if request.GET.order_by == 'newest' or not request.GET.order_by %}active bg-primary{% endif %}" href="?order_by=newest">
+                        <i class="ri-time-line me-1"></i> Newest First 
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {% if request.GET.order_by == 'name_asc' %}active bg-primary{% endif %}" href="?order_by=name_asc">
+                        <i class="ri-sort-alphabet-asc me-1"></i> Name (Ascending A-Z)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {% if request.GET.order_by == 'name_desc' %}active bg-primary{% endif %}" href="?order_by=name_desc">
+                        <i class="ri-sort-alphabet-desc me-1"></i> Name (Descending Z-A)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {% if request.GET.order_by == 'code_asc' %}active bg-primary{% endif %}" href="?order_by=code_asc">
+                        <i class="ri-key-2-line me-1"></i> Department Code
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <a href="{% url 'students:department_add' %}" class="btn btn-dark rounded-3 shadow-sm py-2 px-3">
+            <i class="bi bi-plus-circle-fill"></i> Add Department
+        </a>
+    </div>
+</div>
+
+    <div class="card shadow-sm rounded-3 border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Code</th>
+                            <th>Department Name</th>
+                            <th>Offered Courses</th>
+                            <th class="text-center" style="width: 100px;">Actions</th> </tr>
+                    </thead>
+                    <tbody>
+                        {% for dept in departments %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary p-2 fs-6">{{ dept.department_code }}</span>
+                                </td>
+                                
+                                <td>
+                                    <a href="{% url 'students:department_detail' dept.pk %}" class="hover-link text-decoration-none fw-bold text-dark fs-5">
+                                        {{ dept.department_name }}
+                                    </a>
+                                </td>
+                                
+                                <td>
+                                    {% for course in dept.courses.all %}
+                                        <span class="badge bg-light text-primary border border-primary-subtle fw-semibold me-1 mb-1" style="font-size: 0.85rem;">
+                                            {{ course.course_code }}
+                                        </span>
+                                    {% empty %}
+                                        <span class="text-muted fst-italic small">No courses offered yet</span>
+                                    {% endfor %}
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'students:department_edit' dept.pk %}" class="btn btn-sm btn-outline-success" title="Edit Department">
+                                            <i class="ri-edit-box-fill"></i>
+                                        </a>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-2" data-bs-toggle="modal" data-bs-target="#deleteDeptModal-{{ dept.pk }}" title="Delete Department">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <div class="modal fade" id="deleteDeptModal-{{ dept.pk }}" tabindex="-1" aria-labelledby="deleteDeptLabel-{{ dept.pk }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 rounded-4 shadow">
+                                        <div class="modal-header border-0 pb-0">
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body p-4 text-center">
+                                            <div class="mb-3">
+                                                <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3.5rem;"></i>
+                                            </div>
+                                            <h4 class="fw-bold text-dark mb-2">Danger Zone!</h4>
+                                            <p class="text-muted mb-0">Are you sure you want to delete <strong class="text-dark">"{{ dept.department_name }}"</strong>?</p>
+                                            <p class="text-danger small fw-bold mt-2">
+                                                <i class="bi bi-info-circle"></i> Warning: This will also permanently delete all courses linked to this department.
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer border-0 pt-0 d-flex justify-content-center gap-2 pb-4">
+                                            <button type="button" class="btn btn-light border rounded-3 px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{% url 'students:department_delete' dept.pk %}" method="post" class="m-0">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger rounded-3 px-4 py-2">
+                                                    Yes, Delete Everything
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle fs-3"></i>
+                                    <p class="m-0 mt-2">No departments found.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

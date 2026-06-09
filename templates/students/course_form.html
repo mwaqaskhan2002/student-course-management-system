@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Add New Course{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow rounded-3 border-0">
+                <div class="card-header bg-primary text-white py-3 fw-bold fs-5">Add New Course</div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger mb-4 shadow-sm">
+                                {% for error in form.non_field_errors %}
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-error-warning-line fs-5 me-2"></i>
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger small">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">Save Course</button>
+                            <a href="{% url 'students:student_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
