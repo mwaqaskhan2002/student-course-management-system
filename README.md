@@ -71,5 +71,8 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-👨‍💻 Author
+---
+
+## Author
+
 Muhammad Waqas Khan
